@@ -1,17 +1,10 @@
 MKDIR := mkdir -p
-RM := rm -r
+RM := rm -rf
 CC := cc
 
 COMMON_FLAGS := -Wall -Wextra -Werror -Wpedantic -MMD -MP
 
-SRC_DIR := src
-INC_DIRS := include $(SRC_DIR)
 BUILD_DIR := build
-BIN_DIR := bin
-TST_DIR := tests
-
-TARGET := $(BIN_DIR)/chip_8
-TARGET_TST := $(BIN_DIR)/chip_8_tst
 
 BUILD ?= debug
 
@@ -25,25 +18,58 @@ else
 	$(error BUILD must be `debug` or `release`, got '$(BUILD)')
 endif
 
-CFLAGS += $(addprefix -I,$(INC_DIRS))
+INC_DIRS := include $(SRC_DIR)
 
-SRCS := $(shell find $(SRC_DIR) -name "*.c")
-OBJS := $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SRCS))
-DEPS := $(OBJS:.o=.d)
+CFLAGS += $(addprefix -I,$(INC_DIRS))
 
 # Build
 
-$(TARGET): $(OBJS) $(BIN_DIR)
+SRC_DIR := src
+BIN_DIR := bin
+
+SRCS := $(shell find $(SRC_DIR) -name "*.c")
+OBJS := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRCS))
+DEPS := $(OBJS:.o=.d)
+TARGET := $(BIN_DIR)/chip_8
+
+$(TARGET): $(OBJS) | $(BIN_DIR)
 	$(CC) $(OBJS) $(CFLAGS) -o $@
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(MKDIR) $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BIN_DIR) $(BUILD_DIR):
+# Build Tests
+
+BIN_DIR_TST := bin/tests
+OBJ_DIR_TST := $(OBJ_DIR)/tests
+TST_DIR := tests
+
+SRCS_TST := $(shell find $(TST_DIR) -name "*.c")
+OBJS_TST := $(patsubst $(TST_DIR)/%.c, $(OBJ_DIR_TST)/%.o, $(SRCS_TST)) $(filter-out $(OBJ_DIR)/main.o,$(OBJS))
+DEPS_TST := $(OBJS_TST:.o=.d)
+TARGETS_TST := $(patsubst $(TST_DIR)/%.c,$(BIN_DIR_TST)/%,$(SRCS_TST))
+TARGETS_TST_DIR := $(dir $(TARGETS_TST))
+
+CFLAGS_TST = $(CFLAGS) $(addprefix -I,$(TST_DIR))
+$(BIN_DIR_TST)/%: $(OBJS_TST) | $(TARGETS_TST_DIR)
+	$(CC) $^ $(CFLAGS_TST) -o $@
+
+$(OBJ_DIR_TST)/%.o: $(TST_DIR)/%.c
+	$(MKDIR) $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Directories
+
+$(BIN_DIR) $(OBJ_DIR) $(TARGETS_TST_DIR):
 	@$(MKDIR) $@
 
 # Commands
+
+test: $(TARGETS_TST)
+	@for t in $(TARGETS_TST); do echo "RUN $$t"; ./$$t || exit 1; done
+
+check: test
 
 run: $(TARGET)
 	./$(TARGET)
@@ -53,4 +79,4 @@ clean:
 
 -include $(DEPS)
 
-.PHONY: run clean
+.PHONY: run clean test check
