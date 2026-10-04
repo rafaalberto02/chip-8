@@ -1,5 +1,5 @@
 #include "../utils/message_macros.h"
-#include "stack.h"
+#include "chip_8_stack.h"
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>

@@ -1,5 +1,8 @@
 # Chip 8 emulator
 
+## Dependencies
+
+- [raylib](https://github.com/raysan5/raylib)
 
 ## References 
 

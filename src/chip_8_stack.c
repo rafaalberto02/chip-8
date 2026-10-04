@@ -1,8 +1,8 @@
-#include "stack.h"
+#include <chip_8_stack.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
-uint16_t stack_push(Stack *stack, uint16_t item) {
+uint16_t stack_push(chip_8_stack *stack, uint16_t item) {
   if (stack->count >= stack->capacity) {
     if (stack->capacity == 0)
       stack->capacity = STACK_DEFAULT_CAPACITY;
@@ -18,7 +18,7 @@ uint16_t stack_push(Stack *stack, uint16_t item) {
   return item;
 }
 
-void stack_shrink(Stack *stack) {
+void stack_shrink(chip_8_stack *stack) {
   bool can_shrink = stack->count > STACK_DEFAULT_CAPACITY &&
                     stack->count < (stack->capacity - STACK_DEFAULT_CAPACITY);
 
@@ -34,7 +34,7 @@ void stack_shrink(Stack *stack) {
   }
 }
 
-uint16_t stack_pop(Stack *stack) {
+uint16_t stack_pop(chip_8_stack *stack) {
   if (stack->count == 0)
     return 0;
 
@@ -45,7 +45,7 @@ uint16_t stack_pop(Stack *stack) {
   return item;
 }
 
-void stack_free(Stack *stack) {
+void stack_free(chip_8_stack *stack) {
   if (stack->items != NULL) {
     free(stack->items);
     stack->items = NULL;

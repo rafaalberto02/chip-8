@@ -18,9 +18,12 @@ else
 	$(error BUILD must be `debug` or `release`, got '$(BUILD)')
 endif
 
-INC_DIRS := include $(SRC_DIR)
+INC_DIRS := include/chip_8 $(SRC_DIR)
 
-CFLAGS += $(addprefix -I,$(INC_DIRS))
+CFLAGS += $(addprefix -I,$(INC_DIRS)) 
+CFLAGS += $(shell pkg-config --cflags raylib)
+
+LDFLAGS = $(shell pkg-config --libs raylib) # -framework IOKit -framework Cocoa -framework OpenGL -framework CoreVideo
 
 # Build
 
@@ -33,7 +36,7 @@ DEPS := $(OBJS:.o=.d)
 TARGET := $(BIN_DIR)/chip_8
 
 $(TARGET): $(OBJS) | $(BIN_DIR)
-	$(CC) $(OBJS) $(CFLAGS) -o $@
+	$(CC) $(OBJS) $(CFLAGS) $(LDFLAGS) -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(MKDIR) $(dir $@)
